@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:my_notes_todo_app/controllers/notes_controller.dart';
+import 'package:my_notes_todo_app/models/note_model.dart';
 import 'package:my_notes_todo_app/utils/app_colors.dart';
 
 class NotesScreen extends StatelessWidget {
@@ -6,6 +10,43 @@ class NotesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final noteController = Get.put(NotesController());
+    final updatedNoteArgument = Get.arguments ??
+        {
+          'isUpdate': false,
+          'note': null,
+          'index': null,
+        };
+    final bool isUpdate = updatedNoteArgument['isUpdate'];
+    final note = updatedNoteArgument['note'] == null
+        ? null
+        : updatedNoteArgument['note'] as NoteModel;
+
+    final int? index = updatedNoteArgument['index'] == null
+        ? null
+        : updatedNoteArgument['index'] as int;
+
+    final titleController = TextEditingController(
+      text: isUpdate ? note?.title : null,
+    );
+    final descriptionController = TextEditingController(
+      text: isUpdate ? note?.description : null,
+    );
+
+    final createdTimeFormat = note?.createdDate == null
+        ? null
+        : DateFormat().add_jm().format(note!.createdDate);
+    final createdDateFormat = note?.createdDate == null
+        ? null
+        : DateFormat().add_yMMMMd().format(note!.createdDate);
+
+    final updatedTimeFormat = note?.updatedDate == null
+        ? null
+        : DateFormat().add_jm().format(note?.updatedDate as DateTime);
+    final updatedDateFormat = note?.updatedDate == null
+        ? null
+        : DateFormat().add_yMMMMd().format(note?.updatedDate as DateTime);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
@@ -35,6 +76,7 @@ class NotesScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   TextFormField(
+                    controller: titleController,
                     decoration: InputDecoration(
                         hintText: "Enter Your Title",
                         border: InputBorder.none,
@@ -50,6 +92,7 @@ class NotesScreen extends StatelessWidget {
                   Expanded(
                     child: SingleChildScrollView(
                       child: TextFormField(
+                        controller: descriptionController,
                         minLines: 1,
                         maxLines: 50,
                         decoration: InputDecoration(
@@ -66,17 +109,40 @@ class NotesScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('Last Modified: 10 Aug 2014. 12:35 am'),
-                      Text('Created: 08 Aug 2014. 11:35 am'),
-                    ],
-                  )
+                  isUpdate
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            note?.updatedDate != null
+                                ? Text(
+                                    'Last Modified: $updatedDateFormat. $updatedTimeFormat')
+                                : const SizedBox(),
+                            Text(
+                                'Created: $createdDateFormat. $createdTimeFormat'),
+                          ],
+                        )
+                      : const SizedBox()
                 ],
               ),
             ),
             InkWell(
+              onTap: () {
+                isUpdate
+                    ? noteController.updateNotes(
+                        index!,
+                        NoteModel(
+                          title: titleController.text,
+                          description: descriptionController.text,
+                          createdDate: note!.createdDate,
+                          updatedDate: DateTime.now(),
+                        ))
+                    : noteController.addNotes(NoteModel(
+                        title: titleController.text,
+                        description: descriptionController.text,
+                        createdDate: DateTime.now(),
+                      ));
+                Get.back();
+              },
               child: Container(
                 width: double.infinity,
                 alignment: Alignment.center,
@@ -86,9 +152,9 @@ class NotesScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: AppColors.primaryColor,
                     borderRadius: BorderRadius.circular(10)),
-                child: const Text(
-                  'Save Changes',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
+                child: Text(
+                  isUpdate ? 'Update Changes' : 'Save Changes',
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
                 ),
               ),
             ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:my_notes_todo_app/controllers/notes_controller.dart';
 import 'package:my_notes_todo_app/utils/app_colors.dart';
 import 'package:my_notes_todo_app/views/notes_screen.dart';
 
@@ -8,6 +10,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final notesController = Get.put(NotesController());
     return Scaffold(
       floatingActionButton: IconButton(
         onPressed: () => Get.to(() => const NotesScreen()),
@@ -56,69 +59,106 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(
                 height: 10,
               ),
-              Expanded(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      padding: EdgeInsets.all(10),
-                      margin: EdgeInsets.only(bottom: 10),
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20)),
-                      child: ListTile(
-                        horizontalTitleGap: 0,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 5),
-                        minVerticalPadding: 0,
-                        titleAlignment: ListTileTitleAlignment.titleHeight,
-                        leading: Container(
-                          width: 12,
-                          height: 12,
+              Obx(
+                () => Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: notesController.notes.length,
+                    itemBuilder: (context, index) {
+                      final note = notesController.notes[index];
+
+                      final createdTimeFormat =
+                          DateFormat().add_jm().format(note.createdDate);
+                      final createdDateFormat =
+                          DateFormat().add_yMMMMd().format(note.createdDate);
+
+                      final updatedTimeFormat = note.updatedDate == null
+                          ? null
+                          : DateFormat()
+                              .add_jm()
+                              .format(note.updatedDate as DateTime);
+                      final updatedDateFormat = note.updatedDate == null
+                          ? null
+                          : DateFormat()
+                              .add_yMMMMd()
+                              .format(note.updatedDate as DateTime);
+
+                      return InkWell(
+                        onTap: () =>
+                            Get.to(() => const NotesScreen(), arguments: {
+                          'isUpdate': true,
+                          'note': note,
+                          'index': index,
+                        }),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.only(bottom: 10),
                           decoration: BoxDecoration(
-                              color: AppColors.backgroundColor,
-                              shape: BoxShape.circle),
-                        ),
-                        title: Text(
-                          'Software Enginner',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.secondaryColor,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Professional Software Enginner',
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20)),
+                          child: ListTile(
+                            horizontalTitleGap: 0,
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 5),
+                            minVerticalPadding: 0,
+                            titleAlignment: ListTileTitleAlignment.titleHeight,
+                            leading: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                  color: AppColors.backgroundColor,
+                                  shape: BoxShape.circle),
+                            ),
+                            title: Text(
+                              note.title,
                               style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.backgroundSecondaryColor,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.secondaryColor,
                               ),
                             ),
-                            Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    '12:00 AM',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.backgroundSecondaryColor,
-                                    ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  overflow: TextOverflow.ellipsis,
+                                  note.description,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.backgroundSecondaryColor,
                                   ),
-                                  IconButton(
-                                      onPressed: () {},
-                                      icon: const Icon(Icons.delete)),
-                                ]),
-                          ],
+                                ),
+                                Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        note.updatedDate == null
+                                            ? 'Created: $createdDateFormat. $createdTimeFormat'
+                                            : 'Last Modified: $updatedDateFormat. $updatedTimeFormat',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors
+                                              .backgroundSecondaryColor,
+                                        ),
+                                      ),
+                                      IconButton(
+                                          onPressed: () {
+                                            Get.snackbar('Deleted',
+                                                'Note Deleted Successfully');
+                                            notesController.deleteNotes(index);
+                                          },
+                                          icon: const Icon(Icons.delete)),
+                                    ]),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               )
             ],
