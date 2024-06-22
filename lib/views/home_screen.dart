@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:my_notes_todo_app/utils/app_colors.dart';
+import 'package:my_notes_todo_app/views/notes_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -7,6 +9,17 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: IconButton(
+        onPressed: () => Get.to(() => const NotesScreen()),
+        icon: const Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 40,
+        ),
+        style: IconButton.styleFrom(
+          backgroundColor: AppColors.primaryColor,
+        ),
+      ),
       backgroundColor: AppColors.backgroundColor,
       body: SafeArea(
           child: Padding(
